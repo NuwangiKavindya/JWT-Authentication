@@ -6,7 +6,10 @@ load_dotenv()
 
 MONGO_URL = os.getenv("MONGO_URL")
 
-client = AsyncIOMotorClient(MONGO_URL)
+client = AsyncIOMotorClient(
+    MONGO_URL,
+    tlsAllowInvalidCertificates=True  
+)
 
 db = client["nuwangikavindya21_db_user"]
 user_collection = db["users"]

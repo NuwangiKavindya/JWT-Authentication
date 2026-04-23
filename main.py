@@ -1,4 +1,5 @@
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse, JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.concurrency import run_in_threadpool
@@ -7,6 +8,14 @@ from auth_utils import get_password_hash, create_access_token, verify_password
 from s3_utils import upload_file_to_s3
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.exception_handler(HTTPException)
 async def custom_http_exception_handler(request: Request, exc: HTTPException):
@@ -20,6 +29,14 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     return JSONResponse(
         status_code=422,
         content={"success": False, "message": "Validation error", "data": exc.errors()}
+    )
+
+@app.exception_handler(Exception)
+async def generic_exception_handler(request: Request, exc: Exception):
+    print(f"Unhandled error: {exc}") # Print to server logs for debugging
+    return JSONResponse(
+        status_code=500,
+        content={"success": False, "message": "An unexpected error occurred. Please check server logs.", "error_details": str(exc)}
     )
 
 @app.get("/")
